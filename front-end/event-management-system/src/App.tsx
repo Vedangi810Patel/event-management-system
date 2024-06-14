@@ -6,6 +6,7 @@ import Registration from './components/Registration/Registration';
 import ResetPassword from './components/ResetPassword/ResetPassword';
 import UserDashBoard from './components/UserDashBoard/UserDashBoard';
 import AdminDashBoard from './components/AdminDashBoard/AdminDashBoard';
+import EventCalendar from './components/EventCalendar/EventCalendar';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path='/Forgot-password' element={<ResetPassword/>} />
           <Route path='/user-dashboard' element={<UserDashBoard/>} />
           <Route path='/admin-dashboard' element={<AdminDashBoard/>} />
+          <Route path='/calendar' element={<EventCalendar/>} />
         </Routes>
       </BrowserRouter>
     </div>

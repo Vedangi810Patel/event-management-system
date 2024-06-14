@@ -42,7 +42,7 @@ const Registration = async (req, res) => {
                 user_type: "user",
             });
 
-            res.status(200).json({ message: "User created successfully"});
+            res.status(200).json({ message: "User created successfully" });
         });
     } catch (error) {
         console.error("Error adding user:", error);
@@ -90,7 +90,7 @@ const LogIn = async (req, res) => {
             return res.status(200).json({
                 message: "Login successful",
                 token: token,
-                user_type : existingUser.user_type
+                user_type: existingUser.user_type
             });
         }
     } catch (err) {
@@ -99,50 +99,106 @@ const LogIn = async (req, res) => {
     }
 };
 
+const fetchAllUsers = async (req, res) => {
+    try {
+        console.log("Fetch");
+        // const createdBy = req.user.user_id;
+        // const userType = req.user.user_type;
+        // console.log(req.user.user_type)
+        // let userData;
+
+        // if (userType === 'admin') {
+        userData = await User.findAll();
+        // } else {
+        // return res.status(401).json({error : "Unauthorized Access !"})            
+        // }
+
+        if (!userData.length) {
+            return res.status(404).json({
+                message: "No User Found"
+            });
+        }
+
+        res.status(200).json(userData);
+    } catch (err) {
+        console.error("Unable to Fetch :", err);
+    }
+}
+
+
+const fetchUserByEmail = async (req, res) => {
+    try {
+        console.log("Fetch");
+        const { u_email } = req.body;
+            // const createdBy = req.user.user_id;
+            // const userType = req.user.user_type;
+            // console.log(req.user.user_type)
+            // let userData;
+
+            // if (userType === 'admin') {
+            userData = await User.findOne({ where: { u_email } });
+            console.log("User Data : ",userData)
+        // } else {
+        // return res.status(401).json({error : "Unauthorized Access !"})            
+        // }
+
+        if (userData.length < 0) {
+            return res.status(404).json({
+                message: "No User Found"
+            });
+        }
+
+        res.status(200).json(userData);
+    } catch (err) {
+        console.error("Unable to Fetch :", err);
+    }
+}
 
 const transporter = nodemailer.createTransport({
-  service: 'Gmail', 
-  auth: {
-    user: 'vedangipatel.netclues@gmail.com',
-    pass: 'uuww gzka lnnp vazh',
-  },
+    service: 'Gmail',
+    auth: {
+        user: 'vedangipatel.netclues@gmail.com',
+        pass: 'uuww gzka lnnp vazh',
+    },
 });
 
 const sendForgotPasswordEmail = async (req, res) => {
-  const { email } = req.body;
+    const { email } = req.body;
 
-  try {
-    const user = await User.findOne({ where: { u_email: email } });
+    try {
+        const user = await User.findOne({ where: { u_email: email } });
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
-    const mailOptions = {
-      from: 'vedangipatel.netclues@gmail.com',
-      to: email,
-      subject: 'Password Recovery',
-      html: `
+        const mailOptions = {
+            from: 'vedangipatel.netclues@gmail.com',
+            to: email,
+            subject: 'Password Recovery',
+            html: `
         <p>Hello ${user.u_name},</p>
         <p>Your password is: ${user.u_password}</p>
         <p>Best regards,</p>
         <p>Your App Team</p>    
       `,
-    };
+        };
 
-    await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions);
 
-    return res.status(200).json({ message: 'Email sent successfully' });
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
-  }
+        return res.status(200).json({ message: 'Email sent successfully' });
+    } catch (error) {
+        console.error('Error sending email:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
 };
 
 
 
-module.exports = { 
+module.exports = {
     Registration,
     LogIn,
-    sendForgotPasswordEmail
+    sendForgotPasswordEmail,
+    fetchAllUsers,
+    fetchUserByEmail
 };

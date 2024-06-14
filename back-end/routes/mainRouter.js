@@ -10,5 +10,9 @@ Routes.post('/login', userController.LogIn);
 
 Routes.post('/forgot-password', userController.sendForgotPasswordEmail);
 
+Routes.get('/all-users', userController.fetchAllUsers);
+
+Routes.post('/userBymail', userController.fetchUserByEmail);
+
 
 module.exports = Routes; 
