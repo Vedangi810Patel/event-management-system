@@ -76,21 +76,21 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../configs/dbConfig');
 
 const User = sequelize.define('User', {
-    u_id: {
+    user_id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
     },
-    u_name: {
+    user_name: {
         type: DataTypes.STRING(50),
         allowNull: false
     },
-    u_email: {
+    user_email: {
         type: DataTypes.STRING(200),
         allowNull: false,
         unique: true
     },
-    u_password: {
+    user_password: {
         type: DataTypes.STRING(500),
         allowNull: false
     },
@@ -123,13 +123,13 @@ const User = sequelize.define('User', {
 });
 
 
-sequelize.sync()
-    .then(() => {
-        console.log("User table has been created if it doesn't exist.");
-    })
-    .catch(error => {
-        console.error('Error creating User table:', error);
-    });
+// sequelize.sync()
+//     .then(() => {
+//         console.log("User table has been created if it doesn't exist.");
+//     })
+//     .catch(error => {
+//         console.error('Error creating User table:', error);
+//     });
 
 // User.sync({ alter: true })
 //     .then(() => {

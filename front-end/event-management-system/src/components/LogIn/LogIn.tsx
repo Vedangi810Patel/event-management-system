@@ -6,8 +6,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login: React.FC = () => {
     const [formData, setFormData] = useState({
-        u_email: '',
-        u_password: '',
+        user_email: '',
+        user_password: '',
     });
     const [errors, setErrors] = useState<string[]>([]);
     const [successMessage, setSuccessMessage] = useState('');
@@ -24,8 +24,8 @@ const Login: React.FC = () => {
 
     const validateForm = () => {
         const newErrors: string[] = [];
-        if (!formData.u_email) newErrors.push('Email is required');
-        if (!formData.u_password) newErrors.push('Password is required');
+        if (!formData.user_email) newErrors.push('Email is required');
+        if (!formData.user_password) newErrors.push('Password is required');
         return newErrors;
     };
 
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
             console.log('User Type : ',response.data.user_type);
 
             if(response.data.user_type === 'admin') {
-                navigate('/admin-dashboard');
+                navigate('/admin/dashboard');
             } else {
                 navigate('/user-dashboard');
             }
@@ -96,8 +96,8 @@ const Login: React.FC = () => {
                                         </InputGroup.Text>
                                         <Form.Control
                                             type="email"
-                                            name="u_email"
-                                            value={formData.u_email}
+                                            name="user_email"
+                                            value={formData.user_email}
                                             onChange={handleChange}
                                             placeholder="Enter your email"
                                         />
@@ -111,8 +111,8 @@ const Login: React.FC = () => {
                                         </InputGroup.Text>
                                         <Form.Control
                                             type={showPassword ? 'text' : 'password'}
-                                            name="u_password"
-                                            value={formData.u_password}
+                                            name="user_password"
+                                            value={formData.user_password}
                                             onChange={handleChange}
                                             placeholder="Enter your password"
                                         />
@@ -140,3 +140,5 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
+

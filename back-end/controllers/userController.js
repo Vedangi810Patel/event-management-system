@@ -6,7 +6,15 @@ const SECRET_KEY = "user";
 const nodemailer = require('nodemailer');
 
 
-const Registration = async (req, res) => {
+const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: 'vedangipatel.netclues@gmail.com',
+        pass: 'uuww gzka lnnp vazh',
+    },
+});
+
+const registration = async (req, res) => {
     console.log(req.body);
     try {
         await profilePictureAuthenticate(req, res, async (err) => {
@@ -18,25 +26,25 @@ const Registration = async (req, res) => {
                 return res.status(400).json({ error: "Error: No File Selected!" });
             }
 
-            const { u_name, u_email, u_password, contact_no } = req.body;
+            const { user_name, user_email, user_password, contact_no } = req.body;
             const profilePicture = req.file.filename;
 
-            if (!u_name || !u_email || !u_password || !profilePicture || !contact_no) {
+            if (!user_name || !user_email || !user_password || !profilePicture || !contact_no) {
                 return res.status(400).json({ error: "Missing required fields" });
             }
 
-            const existingUser = await User.findOne({ where: { u_email } });
+            const existingUser = await User.findOne({ where: { user_email } });
 
             if (existingUser) {
                 return res.status(400).json({ error: "Email already exists" });
             }
 
-            const hashedPassword = await bcrypt.hash(u_password, 10);
+            const hashedPassword = await bcrypt.hash(user_password, 10);
 
             const newUser = await User.create({
-                u_name,
-                u_email,
-                u_password: hashedPassword,
+                user_name,
+                user_email,
+                user_password: hashedPassword,
                 contact_no,
                 profile_pic: profilePicture,
                 user_type: "user",
@@ -51,22 +59,22 @@ const Registration = async (req, res) => {
 };
 
 
-const LogIn = async (req, res) => {
-    const { u_email, u_password } = req.body;
+const logIn = async (req, res) => {
+    const { user_email, user_password } = req.body;
 
-    console.log("Email:", u_email);
+    console.log("Email:", user_email);
     try {
-        if (!u_email || !u_password) {
+        if (!user_email || !user_password) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const existingUser = await User.findOne({ where: { u_email } });
+        const existingUser = await User.findOne({ where: { user_email } });
 
         if (!existingUser) {
             return res.status(400).json({ error: "Email not found" });
         }
 
-        const passwordMatch = await bcrypt.compare(u_password, existingUser.u_password);
+        const passwordMatch = await bcrypt.compare(user_password, existingUser.user_password);
 
         if (!passwordMatch) {
             return res.status(400).json({ error: "Incorrect password" });
@@ -75,8 +83,8 @@ const LogIn = async (req, res) => {
         if (passwordMatch) {
             const token = jwt.sign(
                 {
-                    u_id: existingUser.u_id,
-                    u_email: existingUser.u_email,
+                    user_id: existingUser.user_id,
+                    user_email: existingUser.user_email,
                     profilePicture: existingUser.profile_pic,
                     user_type: existingUser.user_type,
                 },
@@ -99,74 +107,12 @@ const LogIn = async (req, res) => {
     }
 };
 
-const fetchAllUsers = async (req, res) => {
-    try {
-        console.log("Fetch");
-        // const createdBy = req.user.user_id;
-        // const userType = req.user.user_type;
-        // console.log(req.user.user_type)
-        // let userData;
-
-        // if (userType === 'admin') {
-        userData = await User.findAll();
-        // } else {
-        // return res.status(401).json({error : "Unauthorized Access !"})            
-        // }
-
-        if (!userData.length) {
-            return res.status(404).json({
-                message: "No User Found"
-            });
-        }
-
-        res.status(200).json(userData);
-    } catch (err) {
-        console.error("Unable to Fetch :", err);
-    }
-}
-
-
-const fetchUserByEmail = async (req, res) => {
-    try {
-        console.log("Fetch");
-        const { u_email } = req.body;
-            // const createdBy = req.user.user_id;
-            // const userType = req.user.user_type;
-            // console.log(req.user.user_type)
-            // let userData;
-
-            // if (userType === 'admin') {
-            userData = await User.findOne({ where: { u_email } });
-            console.log("User Data : ",userData)
-        // } else {
-        // return res.status(401).json({error : "Unauthorized Access !"})            
-        // }
-
-        if (userData.length < 0) {
-            return res.status(404).json({
-                message: "No User Found"
-            });
-        }
-
-        res.status(200).json(userData);
-    } catch (err) {
-        console.error("Unable to Fetch :", err);
-    }
-}
-
-const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-        user: 'vedangipatel.netclues@gmail.com',
-        pass: 'uuww gzka lnnp vazh',
-    },
-});
 
 const sendForgotPasswordEmail = async (req, res) => {
     const { email } = req.body;
 
     try {
-        const user = await User.findOne({ where: { u_email: email } });
+        const user = await User.findOne({ where: { user_email: email } });
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -177,8 +123,8 @@ const sendForgotPasswordEmail = async (req, res) => {
             to: email,
             subject: 'Password Recovery',
             html: `
-        <p>Hello ${user.u_name},</p>
-        <p>Your password is: ${user.u_password}</p>
+        <p>Hello ${user.user_name},</p>
+        <p>Your password is: ${user.user_password}</p>
         <p>Best regards,</p>
         <p>Your App Team</p>    
       `,
@@ -196,9 +142,13 @@ const sendForgotPasswordEmail = async (req, res) => {
 
 
 module.exports = {
-    Registration,
-    LogIn,
+    registration,
+    logIn,
     sendForgotPasswordEmail,
-    fetchAllUsers,
-    fetchUserByEmail
+    // fetchAllUsers,
+    // fetchUserByEmail,
+    // updateUser,
+    // deleteUser
 };
+
+
