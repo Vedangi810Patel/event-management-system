@@ -3,7 +3,7 @@ const MiddlewareAuthentication = require('../middleware/midAuthentication');
 const userController = require('../controllers/userController');
 const eventController = require('../controllers/eventController');
 const Routes = express.Router();
-
+const profilepictureauthenticate = require('../middleware/profilePictureAuthentication')
 
 Routes.post('/registration', userController.registration);
 
@@ -11,13 +11,13 @@ Routes.post('/login', userController.logIn);
 
 Routes.post('/forgot-password', MiddlewareAuthentication, userController.sendForgotPasswordEmail);
 
-// Routes.get('/all-users', MiddlewareAuthentication, userController.fetchAllUsers);
+Routes.get('/all-users', MiddlewareAuthentication, userController.fetchAllUsers);
 
 // Routes.post('/userBymail', MiddlewareAuthentication,userController.fetchUserByEmail);
 
-// Routes.put('/updateUser', MiddlewareAuthentication, userController.updateUser);
+Routes.put('/updateUser', MiddlewareAuthentication, profilepictureauthenticate, userController.updateUser);
 
-// Routes.post('/delete-user', MiddlewareAuthentication, userController.deleteUser);
+Routes.post('/delete-user', MiddlewareAuthentication, userController.deleteUser);
 
 Routes.post('/new-event', MiddlewareAuthentication, eventController.createEvent);
 

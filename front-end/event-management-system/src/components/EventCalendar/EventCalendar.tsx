@@ -3,42 +3,38 @@ import axios from 'axios';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from "@fullcalendar/list";
+import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
-import { EventInput, EventContentArg } from '@fullcalendar/core';
+import { DateSelectArg, EventInput, EventClickArg } from '@fullcalendar/core';
 import { Modal, Button, Form } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const EventCalendar: React.FC = () => {
-  const navigate = useNavigate();
   const [events, setEvents] = useState<EventInput[]>([]);
-  const [showModal, setShowModal] = useState(false);
-  const [newEvent, setNewEvent] = useState({
-    title: '',
-    start: '',
-    end: '',
-    time: '',
-    venue: '',
-    price: '',
-    capacity: ''
-  });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', time: '', venue: '', price: 0, capacity: 0 });
+  const [selectedEvent, setSelectedEvent] = useState<EventInput | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      navigate('/');
-    }
-
     const fetchEvents = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/events', {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:5000/all-event', {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-        setEvents(response.data);
+        setEvents(response.data.map((event: any) => ({
+          id: event.event_id, 
+          title: event.event_name,
+          start: new Date(event.event_start_date),
+          end: new Date(event.event_end_date),
+          time: event.event_time,
+          venue: event.event_venue,
+          price: event.event_price,
+          capacity: event.event_capacity
+        })));
       } catch (error) {
         console.error('Error fetching events:', error);
       }
@@ -47,12 +43,10 @@ const EventCalendar: React.FC = () => {
     fetchEvents();
   }, []);
 
-  const handleDateClick = (arg: any) => {
-    setNewEvent({ ...newEvent, start: arg.dateStr, end: arg.dateStr });
-    setShowModal(true);
+  const handleDateSelect = (arg: DateSelectArg) => {
+    setNewEvent({ ...newEvent, start: arg.startStr, end: arg.endStr });
+    setShowAddModal(true);
   };
-
-  const handleCloseModal = () => setShowModal(false);
 
   const handleSaveEvent = async () => {
     try {
@@ -62,19 +56,44 @@ const EventCalendar: React.FC = () => {
           Authorization: `Bearer ${token}`
         }
       });
-      setEvents([...events, response.data]);
-      setShowModal(false);
+      setEvents([...events, {
+        id: response.data.event_id,
+        title: newEvent.title,
+        start: newEvent.start,
+        end: newEvent.end,
+        time: newEvent.time,
+        venue: newEvent.venue,
+        price: newEvent.price,
+        capacity: newEvent.capacity
+      }]);
+      setShowAddModal(false);
     } catch (error) {
       console.error('Error adding event:', error);
     }
   };
 
-  const renderEventContent = (eventContent: EventContentArg) => (
-    <div>
-      <b>{eventContent.timeText}</b>
-      <i>{eventContent.event.title}</i>
-    </div>
-  );
+  const handleEventClick = (arg: EventClickArg) => {
+    setSelectedEvent({
+      id: arg.event.id,
+      title: arg.event.title,
+      start: new Date(arg.event.startStr),
+      end: new Date(arg.event.endStr),
+      time: arg.event.extendedProps.time,
+      venue: arg.event.extendedProps.venue,
+      price: arg.event.extendedProps.price,
+      capacity: arg.event.extendedProps.capacity
+    });
+    setShowDetailsModal(true);
+  };
+
+  const renderEventContent = (eventInfo: { event: EventInput }) => {
+    return (
+      <div>
+        <b>{eventInfo.event.time}</b>
+        <i>{eventInfo.event.title}</i>
+      </div>
+    );
+  };
 
   return (
     <div className='event-container'>
@@ -83,20 +102,16 @@ const EventCalendar: React.FC = () => {
         initialView="dayGridMonth"
         events={events}
         headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek",
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
         }}
-        dayMaxEventRows={3}
-        dayMaxEvents={true}
-        moreLinkClick="popover"
-        dayPopoverFormat={{ weekday: "long", month: "short", day: "numeric", year: "numeric" }}
-        editable={true}
-        dateClick={handleDateClick}
+        selectable={true}
+        select={handleDateSelect}
+        eventClick={handleEventClick}
         eventContent={renderEventContent}
       />
-
-      <Modal show={showModal} onHide={handleCloseModal}>
+      <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add Event</Modal.Title>
         </Modal.Header>
@@ -147,7 +162,7 @@ const EventCalendar: React.FC = () => {
               <Form.Control
                 type="number"
                 value={newEvent.price}
-                onChange={(e) => setNewEvent({ ...newEvent, price: e.target.value })}
+                onChange={(e) => setNewEvent({ ...newEvent, price: parseFloat(e.target.value) })}
               />
             </Form.Group>
             <Form.Group controlId="formEventCapacity">
@@ -155,17 +170,44 @@ const EventCalendar: React.FC = () => {
               <Form.Control
                 type="number"
                 value={newEvent.capacity}
-                onChange={(e) => setNewEvent({ ...newEvent, capacity: e.target.value })}
+                onChange={(e) => setNewEvent({ ...newEvent, capacity: parseInt(e.target.value) })}
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
+          <Button variant="secondary" onClick={() => setShowAddModal(false)}>
             Close
           </Button>
           <Button variant="primary" onClick={handleSaveEvent}>
             Save Event
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Event Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedEvent && (
+            <div>
+              {[
+                { label: "Title", value: selectedEvent.title },
+                { label: "Venue", value: selectedEvent.venue },
+                { label: "Start Date", value: selectedEvent.start instanceof Date ? selectedEvent.start.toLocaleDateString() : '' },
+                { label: "End Date", value: selectedEvent.end instanceof Date ? selectedEvent.end.toLocaleDateString() : '' },
+                { label: "Time", value: selectedEvent.time },
+                { label: "Price", value: selectedEvent.price },
+                { label: "Capacity", value: selectedEvent.capacity }
+              ].map(item => (
+                <p key={item.label}><strong>{item.label}:</strong> {item.value}</p>
+              ))}
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDetailsModal(false)}>
+            Close
           </Button>
         </Modal.Footer>
       </Modal>
@@ -175,6 +217,3 @@ const EventCalendar: React.FC = () => {
 
 export default EventCalendar;
 
-// now provide me the fetch all , update and delete controller in node js which also verifies the user
-
-// and want to show all users other than the admin at the AllUsers component in a tabular form

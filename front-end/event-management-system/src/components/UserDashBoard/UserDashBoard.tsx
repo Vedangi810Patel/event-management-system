@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 
 const UserDashBoard = () => {
@@ -7,13 +7,22 @@ const UserDashBoard = () => {
   const token = localStorage.getItem('token')
 
   useEffect(() => {
-    if(!token) {
+    if (!token) {
       navigate('/');
     }
-  })
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/');
+  };
 
   return (
-    <h2>UserDashBoard</h2>
+    <div>
+      <h2>UserDashBoard</h2>
+
+      <button onClick={handleLogout}> Log Out </button>
+    </div>
   )
 }
 

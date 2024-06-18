@@ -4,7 +4,7 @@ const User = require("../models/userModel");
 const profilePictureAuthenticate = require("../middleware/profilePictureAuthentication");
 const SECRET_KEY = "user";
 const nodemailer = require('nodemailer');
-
+const { Op } = require('sequelize');
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
@@ -107,6 +107,71 @@ const logIn = async (req, res) => {
     }
 };
 
+const fetchAllUsers = async (req, res) => {
+    try {
+        if (req.user.user_type !== 'admin') {
+            return res.status(403).json({ error: 'Access denied. Admins only.' });
+        }
+        const users = await User.findAll({ where: { user_type: { [Op.ne]: 'admin' } } });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: `Internal server error ${error}` });
+    }
+};
+
+
+const updateUser = async (req, res) => {
+    try {
+        if (req.user.user_type !== 'admin') {
+            return res.status(403).json({ error: 'Access denied. Admins only.' });
+        }
+        const { id } = req.params;
+        const { user_email, user_type } = req.body;
+
+        let profilePicture;
+        if (req.file) {
+            profilePicture = req.file.filename;
+        }
+
+        const user = await User.findByPk(id);
+        console.log(user)
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        user.user_email = user_email;
+        if (profilePicture) {
+            user.profile_pic = profilePicture;
+        }
+        user.user_type = user_type;
+
+        await user.save();
+        res.json(user);
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ error: `Internal server error: ${error}` });
+    }
+};
+
+
+const deleteUser = async (req, res) => {
+    try {
+        if (req.user.user_type !== 'admin') {
+            return res.status(403).json({ error: 'Access denied. Admins only.' });
+        }
+        const { id } = req.params;
+        const user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        await user.destroy();
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
 
 const sendForgotPasswordEmail = async (req, res) => {
     const { email } = req.body;
@@ -145,10 +210,10 @@ module.exports = {
     registration,
     logIn,
     sendForgotPasswordEmail,
-    // fetchAllUsers,
+    fetchAllUsers,
     // fetchUserByEmail,
-    // updateUser,
-    // deleteUser
+    updateUser,
+    deleteUser
 };
 
 
