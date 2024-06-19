@@ -34,6 +34,10 @@ const Registration: React.FC = () => {
         }
     };
 
+    const handleForgotPassword = () => {
+
+    }
+
     const validateForm = () => {
         const newErrors: string[] = [];
         if (!formData.user_name) newErrors.push('Name is required');
@@ -182,7 +186,7 @@ const Registration: React.FC = () => {
                             <Button variant="link" onClick={handleGoToLogin} className="w-100 text-center">
                                 Login
                             </Button>
-                            <Button variant="link" className="w-100 text-center">
+                            <Button variant="link" className="w-100 text-center" onClick={handleForgotPassword}>
                                 Forgot Password?
                             </Button>
                         </Card.Body>

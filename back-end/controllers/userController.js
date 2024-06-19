@@ -6,7 +6,6 @@ const SECRET_KEY = "user";
 const nodemailer = require('nodemailer');
 const { Op } = require('sequelize');
 
-
 const registration = async (req, res) => {
     console.log(req.body);
     try {
@@ -195,7 +194,6 @@ const deleteUser = async (req, res) => {
 const sendForgotPasswordEmail = async (req, res) => {
     const { email } = req.body;
 
-
     const transporter = nodemailer.createTransport({
         service: 'Gmail',
         auth: {
@@ -203,7 +201,6 @@ const sendForgotPasswordEmail = async (req, res) => {
             pass: 'uuww gzka lnnp vazh',
         },
     });
-
 
     try {
         const user = await User.findOne({ where: { user_email: email } });
@@ -223,26 +220,20 @@ const sendForgotPasswordEmail = async (req, res) => {
         <p>Your App Team</p>    
       `,
         };
-
         await transporter.sendMail(mailOptions);
-
         return res.status(200).json({ message: 'Email sent successfully' });
     } catch (error) {
         console.error('Error sending email:', error);
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-
-
+ 
 
 module.exports = {
     registration,
     logIn,
     sendForgotPasswordEmail,
     fetchAllUsers,
-    // fetchUserByEmail,
     updateUser,
     deleteUser
 };
-
-

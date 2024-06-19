@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button } from 'react-bootstrap'; // Import Card and Button from react-bootstrap
-
+import { Card, Button } from 'react-bootstrap';
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
