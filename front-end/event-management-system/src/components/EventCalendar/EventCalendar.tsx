@@ -11,79 +11,94 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const EventCalendar: React.FC = () => {
   const [events, setEvents] = useState<EventInput[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', time: '', venue: '', price: 0, capacity: 0 });
-  const [selectedEvent, setSelectedEvent] = useState<EventInput | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [eventData, setEventData] = useState({ id: '', title: '', start: '', end: '', time: '', venue: '', price: 0, capacity: 0 });
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/all-event', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setEvents(response.data.map((event: any) => ({
-          id: event.event_id, 
-          title: event.event_name,
-          start: new Date(event.event_start_date),
-          end: new Date(event.event_end_date),
-          time: event.event_time,
-          venue: event.event_venue,
-          price: event.event_price,
-          capacity: event.event_capacity
-        })));
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      }
-    };
-
     fetchEvents();
   }, []);
 
+  const fetchEvents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5000/all-event', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setEvents(response.data.map((event: any) => ({
+        id: event.event_id, 
+        title: event.event_name,
+        start: new Date(event.event_start_date),
+        end: new Date(event.event_end_date),
+        time: event.event_time,
+        venue: event.event_venue,
+        price: event.event_price,
+        capacity: event.event_capacity
+      })));
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
   const handleDateSelect = (arg: DateSelectArg) => {
-    setNewEvent({ ...newEvent, start: arg.startStr, end: arg.endStr });
-    setShowAddModal(true);
+    setEventData({ id: '', title: '', start: arg.startStr, end: arg.endStr, time: '', venue: '', price: 0, capacity: 0 });
+    setIsEditing(false);
+    setShowModal(true);
   };
 
   const handleSaveEvent = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/new-event', newEvent, {
+      if (isEditing) {
+        await axios.put(`http://localhost:5000/update-event/${eventData.id}`, eventData, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      } else {
+        await axios.post('http://localhost:5000/new-event', eventData, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
+      setShowModal(false);
+      fetchEvents();
+    } catch (error) {
+      console.error('Error saving event:', error);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/delete-event/${eventData.id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      setEvents([...events, {
-        id: response.data.event_id,
-        title: newEvent.title,
-        start: newEvent.start,
-        end: newEvent.end,
-        time: newEvent.time,
-        venue: newEvent.venue,
-        price: newEvent.price,
-        capacity: newEvent.capacity
-      }]);
-      setShowAddModal(false);
+      setShowModal(false);
+      fetchEvents();
     } catch (error) {
-      console.error('Error adding event:', error);
+      console.error('Error deleting event:', error);
     }
   };
 
   const handleEventClick = (arg: EventClickArg) => {
-    setSelectedEvent({
-      id: arg.event.id,
+    setEventData({
+      id: arg.event.id as string,
       title: arg.event.title,
-      start: new Date(arg.event.startStr),
-      end: new Date(arg.event.endStr),
+      start: arg.event.startStr.split('T')[0],
+      end: arg.event.endStr.split('T')[0],
       time: arg.event.extendedProps.time,
       venue: arg.event.extendedProps.venue,
       price: arg.event.extendedProps.price,
       capacity: arg.event.extendedProps.capacity
     });
-    setShowDetailsModal(true);
+    setIsEditing(true);
+    setShowModal(true);
   };
 
   const renderEventContent = (eventInfo: { event: EventInput }) => {
@@ -111,9 +126,9 @@ const EventCalendar: React.FC = () => {
         eventClick={handleEventClick}
         eventContent={renderEventContent}
       />
-      <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Add Event</Modal.Title>
+          <Modal.Title>{isEditing ? 'Edit Event' : 'Add Event'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -121,93 +136,71 @@ const EventCalendar: React.FC = () => {
               <Form.Label>Title</Form.Label>
               <Form.Control
                 type="text"
-                value={newEvent.title}
-                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                value={eventData.title}
+                onChange={(e) => setEventData({ ...eventData, title: e.target.value })}
               />
             </Form.Group>
             <Form.Group controlId="formEventVenue">
               <Form.Label>Venue</Form.Label>
               <Form.Control
                 type="text"
-                value={newEvent.venue}
-                onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })}
+                value={eventData.venue}
+                onChange={(e) => setEventData({ ...eventData, venue: e.target.value })}
               />
             </Form.Group>
             <Form.Group controlId="formEventStartDate">
               <Form.Label>Start Date</Form.Label>
               <Form.Control
                 type="date"
-                value={newEvent.start}
-                onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
+                value={eventData.start}
+                onChange={(e) => setEventData({ ...eventData, start: e.target.value })}
               />
             </Form.Group>
             <Form.Group controlId="formEventEndDate">
               <Form.Label>End Date</Form.Label>
               <Form.Control
                 type="date"
-                value={newEvent.end}
-                onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
+                value={eventData.end}
+                onChange={(e) => setEventData({ ...eventData, end: e.target.value })}
               />
             </Form.Group>
             <Form.Group controlId="formEventTime">
               <Form.Label>Time</Form.Label>
               <Form.Control
                 type="time"
-                value={newEvent.time}
-                onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                value={eventData.time}
+                onChange={(e) => setEventData({ ...eventData, time: e.target.value })}
               />
             </Form.Group>
             <Form.Group controlId="formEventPrice">
               <Form.Label>Price</Form.Label>
               <Form.Control
                 type="number"
-                value={newEvent.price}
-                onChange={(e) => setNewEvent({ ...newEvent, price: parseFloat(e.target.value) })}
+                value={eventData.price}
+                onChange={(e) => setEventData({ ...eventData, price: parseFloat(e.target.value) })}
               />
             </Form.Group>
             <Form.Group controlId="formEventCapacity">
               <Form.Label>Capacity</Form.Label>
               <Form.Control
                 type="number"
-                value={newEvent.capacity}
-                onChange={(e) => setNewEvent({ ...newEvent, capacity: parseInt(e.target.value) })}
+                value={eventData.capacity}
+                onChange={(e) => setEventData({ ...eventData, capacity: parseInt(e.target.value) })}
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleSaveEvent}>
-            Save Event
-          </Button>
-        </Modal.Footer>
-      </Modal>
-      <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Event Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedEvent && (
-            <div>
-              {[
-                { label: "Title", value: selectedEvent.title },
-                { label: "Venue", value: selectedEvent.venue },
-                { label: "Start Date", value: selectedEvent.start instanceof Date ? selectedEvent.start.toLocaleDateString() : '' },
-                { label: "End Date", value: selectedEvent.end instanceof Date ? selectedEvent.end.toLocaleDateString() : '' },
-                { label: "Time", value: selectedEvent.time },
-                { label: "Price", value: selectedEvent.price },
-                { label: "Capacity", value: selectedEvent.capacity }
-              ].map(item => (
-                <p key={item.label}><strong>{item.label}:</strong> {item.value}</p>
-              ))}
-            </div>
+          {isEditing && (
+            <Button variant="danger" onClick={handleDeleteEvent}>
+              Delete Event
+            </Button>
           )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDetailsModal(false)}>
-            Close
+          <Button variant="primary" onClick={handleSaveEvent}>
+            {isEditing ? 'Update Event' : 'Save Event'}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -216,4 +209,4 @@ const EventCalendar: React.FC = () => {
 };
 
 export default EventCalendar;
-
+  

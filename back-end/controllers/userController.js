@@ -6,13 +6,6 @@ const SECRET_KEY = "user";
 const nodemailer = require('nodemailer');
 const { Op } = require('sequelize');
 
-// const transporter = nodemailer.createTransport({
-//     service: 'Gmail',
-//     auth: {
-//         user: 'vedangipatel.netclues@gmail.com',
-//         pass: 'uuww gzka lnnp vazh',
-//     },
-// });
 
 const registration = async (req, res) => {
     console.log(req.body);
@@ -71,6 +64,7 @@ const registration = async (req, res) => {
                     <p>New Account Creation Request Found as below </p> 
                     <p>User email : ${user_email}</p>
                     <p>User Name : ${user_name}</p>
+                    <p> http://localhost:3000/admin/all-users </p>
                     <p>Best regards,</p>
                     <p>Your App Team</p>    
                 `,
@@ -97,7 +91,7 @@ const logIn = async (req, res) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const existingUser = await User.findOne({ where: { user_email } });
+        const existingUser = await User.findOne({ where: { user_email , isactive:1 } });
 
         if (!existingUser) {
             return res.status(400).json({ error: "Email not found" });
@@ -148,15 +142,13 @@ const fetchAllUsers = async (req, res) => {
     }
 };
 
-
 const updateUser = async (req, res) => {
     try {
         if (req.user.user_type !== 'admin') {
             return res.status(403).json({ error: 'Access denied. Admins only.' });
         }
-        const { user_id, user_name, user_email, contact_no, user_type } = req.body;
+        const { user_id, user_name, user_email, contact_no, user_type, isactive } = req.body;
         const profile_pic = req.file ? req.file.filename : null;
-
 
         const user = await User.findByPk(user_id);
         if (!user) {
@@ -167,6 +159,9 @@ const updateUser = async (req, res) => {
         user.user_email = user_email;
         user.contact_no = contact_no;
         user.user_type = user_type;
+        user.isactive = isactive;
+        user.account_status = isactive == 1 ? 'accepted' : 'pending';
+
         if (profile_pic) {
             user.profile_pic = profile_pic;
         }
@@ -178,7 +173,6 @@ const updateUser = async (req, res) => {
         res.status(500).json({ error: `Internal server error: ${error}` });
     }
 };
-
 
 const deleteUser = async (req, res) => {
     try {
@@ -197,8 +191,6 @@ const deleteUser = async (req, res) => {
         res.status(500).json({ error: `Internal server error : ${error}` });
     }
 };
-
-
 
 const sendForgotPasswordEmail = async (req, res) => {
     const { email } = req.body;

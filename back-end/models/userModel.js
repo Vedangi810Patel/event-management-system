@@ -115,7 +115,7 @@ const User = sequelize.define('User', {
     isactive: {
         type: DataTypes.INTEGER(1),
         allowNull: false,
-        defaultValue: 1
+        defaultValue: 0
     }
 }, {
     tableName: 'users',
