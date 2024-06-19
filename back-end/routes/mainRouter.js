@@ -15,9 +15,9 @@ Routes.get('/all-users', MiddlewareAuthentication, userController.fetchAllUsers)
 
 // Routes.post('/userBymail', MiddlewareAuthentication,userController.fetchUserByEmail);
 
-Routes.put('/updateUser', MiddlewareAuthentication, profilepictureauthenticate, userController.updateUser);
+Routes.post('/updateUser', MiddlewareAuthentication, profilepictureauthenticate, userController.updateUser);
 
-Routes.post('/delete-user', MiddlewareAuthentication, userController.deleteUser);
+Routes.delete('/delete-user', MiddlewareAuthentication, userController.deleteUser);
 
 Routes.post('/new-event', MiddlewareAuthentication, eventController.createEvent);
 

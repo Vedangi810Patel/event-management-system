@@ -6,9 +6,9 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Registration: React.FC = () => {
     const [formData, setFormData] = useState({
-        u_name: '',
-        u_email: '',
-        u_password: '',
+        user_name: '',
+        user_email: '',
+        user_password: '',
         contact_no: '',
         profilePicture: null as File | null,
     });
@@ -36,9 +36,9 @@ const Registration: React.FC = () => {
 
     const validateForm = () => {
         const newErrors: string[] = [];
-        if (!formData.u_name) newErrors.push('Name is required');
-        if (!formData.u_email) newErrors.push('Email is required');
-        if (!formData.u_password) newErrors.push('Password is required');
+        if (!formData.user_name) newErrors.push('Name is required');
+        if (!formData.user_email) newErrors.push('Email is required');
+        if (!formData.user_password) newErrors.push('Password is required');
         if (!formData.contact_no) newErrors.push('Contact number is required');
         if (!formData.profilePicture) newErrors.push('Profile picture is required');
         return newErrors;
@@ -55,9 +55,9 @@ const Registration: React.FC = () => {
         setLoading(true);
 
         const formDataToSubmit = new FormData();
-        formDataToSubmit.append('u_name', formData.u_name);
-        formDataToSubmit.append('u_email', formData.u_email);
-        formDataToSubmit.append('u_password', formData.u_password);
+        formDataToSubmit.append('user_name', formData.user_name);
+        formDataToSubmit.append('user_email', formData.user_email);
+        formDataToSubmit.append('user_password', formData.user_password);
         formDataToSubmit.append('contact_no', formData.contact_no);
         if (formData.profilePicture) {
             formDataToSubmit.append('profilePicture', formData.profilePicture);
@@ -68,9 +68,9 @@ const Registration: React.FC = () => {
             setSuccessMessage('User registered successfully');
             setErrors([]);
             setFormData({
-                u_name: '',
-                u_email: '',
-                u_password: '',
+                user_name: '',
+                user_email: '',
+                user_password: '',
                 contact_no: '',
                 profilePicture: null,
             });
@@ -111,8 +111,8 @@ const Registration: React.FC = () => {
                                         </InputGroup.Text>
                                         <Form.Control
                                             type="text"
-                                            name="u_name"
-                                            value={formData.u_name}
+                                            name="user_name"
+                                            value={formData.user_name}
                                             onChange={handleChange}
                                             placeholder="Enter your name"
                                         />
@@ -126,8 +126,8 @@ const Registration: React.FC = () => {
                                         </InputGroup.Text>
                                         <Form.Control
                                             type="email"
-                                            name="u_email"
-                                            value={formData.u_email}
+                                            name="user_email"
+                                            value={formData.user_email}
                                             onChange={handleChange}
                                             placeholder="Enter your email"
                                         />
@@ -141,8 +141,8 @@ const Registration: React.FC = () => {
                                         </InputGroup.Text>
                                         <Form.Control
                                             type={showPassword ? 'text' : 'password'}
-                                            name="u_password"
-                                            value={formData.u_password}
+                                            name="user_password"
+                                            value={formData.user_password}
                                             onChange={handleChange}
                                             placeholder="Enter your password"
                                         />

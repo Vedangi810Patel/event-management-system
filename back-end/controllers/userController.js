@@ -6,13 +6,13 @@ const SECRET_KEY = "user";
 const nodemailer = require('nodemailer');
 const { Op } = require('sequelize');
 
-const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-        user: 'vedangipatel.netclues@gmail.com',
-        pass: 'uuww gzka lnnp vazh',
-    },
-});
+// const transporter = nodemailer.createTransport({
+//     service: 'Gmail',
+//     auth: {
+//         user: 'vedangipatel.netclues@gmail.com',
+//         pass: 'uuww gzka lnnp vazh',
+//     },
+// });
 
 const registration = async (req, res) => {
     console.log(req.body);
@@ -41,7 +41,7 @@ const registration = async (req, res) => {
 
             const hashedPassword = await bcrypt.hash(user_password, 10);
 
-            const newUser = await User.create({
+            await User.create({
                 user_name,
                 user_email,
                 user_password: hashedPassword,
@@ -51,6 +51,35 @@ const registration = async (req, res) => {
             });
 
             res.status(200).json({ message: "User created successfully" });
+
+
+            const transporter = nodemailer.createTransport({
+                service: 'Gmail',
+                auth: {
+                    user: 'vedangipatel.netclues@gmail.com',
+                    pass: 'uuww gzka lnnp vazh',
+                },
+            });
+
+
+            const mailOptions = {
+                from: user_email,
+                to: 'vadangipatel.netclues@gmail.com',
+                subject: 'Account Creation`',
+                html: `
+                    <p>Hello Admin, </p>
+                    <p>New Account Creation Request Found as below </p> 
+                    <p>User email : ${user_email}</p>
+                    <p>User Name : ${user_name}</p>
+                    <p>Best regards,</p>
+                    <p>Your App Team</p>    
+                `,
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            return res.status(200).json({ message: 'Email sent successfully' });
+
         });
     } catch (error) {
         console.error("Error adding user:", error);
@@ -125,25 +154,22 @@ const updateUser = async (req, res) => {
         if (req.user.user_type !== 'admin') {
             return res.status(403).json({ error: 'Access denied. Admins only.' });
         }
-        const { id } = req.params;
-        const { user_email, user_type } = req.body;
+        const { user_id, user_name, user_email, contact_no, user_type } = req.body;
+        const profile_pic = req.file ? req.file.filename : null;
 
-        let profilePicture;
-        if (req.file) {
-            profilePicture = req.file.filename;
-        }
 
-        const user = await User.findByPk(id);
-        console.log(user)
+        const user = await User.findByPk(user_id);
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
+        user.user_name = user_name;
         user.user_email = user_email;
-        if (profilePicture) {
-            user.profile_pic = profilePicture;
-        }
+        user.contact_no = contact_no;
         user.user_type = user_type;
+        if (profile_pic) {
+            user.profile_pic = profile_pic;
+        }
 
         await user.save();
         res.json(user);
@@ -159,15 +185,16 @@ const deleteUser = async (req, res) => {
         if (req.user.user_type !== 'admin') {
             return res.status(403).json({ error: 'Access denied. Admins only.' });
         }
-        const { id } = req.params;
-        const user = await User.findByPk(id);
+        const { user_id } = req.body;
+        const user = await User.findByPk(user_id);
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
+
         await user.destroy();
         res.json({ message: 'User deleted successfully' });
     } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: `Internal server error : ${error}` });
     }
 };
 
@@ -175,6 +202,16 @@ const deleteUser = async (req, res) => {
 
 const sendForgotPasswordEmail = async (req, res) => {
     const { email } = req.body;
+
+
+    const transporter = nodemailer.createTransport({
+        service: 'Gmail',
+        auth: {
+            user: 'vedangipatel.netclues@gmail.com',
+            pass: 'uuww gzka lnnp vazh',
+        },
+    });
+
 
     try {
         const user = await User.findOne({ where: { user_email: email } });
